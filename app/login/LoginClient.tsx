@@ -41,10 +41,8 @@ export default function LoginClient() {
     let target = "/my-timetable";
     if (next) target = next;
     else if (role === "admin") target = "/admin";
-    else if (role === "teacher") {
-      // if you don't have this page yet, it'll 404; otherwise nice teacher dashboard
-      target = "/teacher/my-timetable";
-    }
+    // Teachers and students both use /my-timetable
+    // (role-specific content is handled by the page itself)
 
     // 4) Hard reload so nav picks up new session
     window.location.assign(target);

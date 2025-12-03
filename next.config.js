@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverActions: {}, // must be an object, not boolean
+    serverActions: {
+      bodySizeLimit: '50mb', // Allow large ZIP uploads
+    },
   },
 };
 

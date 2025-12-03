@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import "server-only";
 import { supabaseServer } from "@/lib/supabaseServer";
 
+// Route segment config for large file uploads
+export const maxDuration = 60; // 60 seconds timeout
+export const dynamic = 'force-dynamic';
+
 // Expect: a ZIP containing page PDFs named in natural order (e.g. p-001.pdf ...)
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
