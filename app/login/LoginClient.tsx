@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
-type Role = "admin" | "teacher" | "student";
+type Role = "admin" | "teacher" | "student" | "browser";
 
 export default function LoginClient() {
   const search = useSearchParams();
@@ -32,7 +32,7 @@ export default function LoginClient() {
       const r = await fetch("/api/auth/whoami", { cache: "no-store" });
       const j = await r.json();
       const raw = (j?.profile?.role ?? "student").toLowerCase();
-      if (raw === "admin" || raw === "teacher" || raw === "student") role = raw;
+      if (raw === "admin" || raw === "teacher" || raw === "student" || raw === "browser") role = raw;
     } catch {
       // default to student
     }
@@ -41,6 +41,7 @@ export default function LoginClient() {
     let target = "/my-timetable";
     if (next) target = next;
     else if (role === "admin") target = "/admin";
+    else if (role === "browser") target = "/browse-timetables";
     // Teachers and students both use /my-timetable
     // (role-specific content is handled by the page itself)
 

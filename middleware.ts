@@ -31,7 +31,7 @@ export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const isLogin = path === "/login";
   const isAdmin = path.startsWith("/admin");
-  const isProtected = isAdmin || path.startsWith("/my-timetable");
+  const isProtected = isAdmin || path.startsWith("/my-timetable") || path.startsWith("/browse-timetables");
 
   if (!session && isProtected) {
     const url = req.nextUrl.clone();
@@ -49,10 +49,11 @@ export async function middleware(req: NextRequest) {
       .eq("user_id", session.user.id)
       .maybeSingle();
 
-    const role = (prof?.role ?? "student") as "admin" | "teacher" | "student";
+    const role = (prof?.role ?? "student") as "admin" | "teacher" | "student" | "browser";
 
     const url = req.nextUrl.clone();
     if (role === "admin") url.pathname = "/admin";
+    else if (role === "browser") url.pathname = "/browse-timetables";
     else if (role === "teacher") {
       url.pathname = "/my-timetable";
       url.searchParams.set("view", "teacher");
