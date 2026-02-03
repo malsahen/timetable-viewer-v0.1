@@ -50,8 +50,8 @@ export default async function BrowseTimetablesPage() {
 
     const role = profile?.role ?? "student";
 
-    // Only browser and admin roles can access this page
-    if (role !== "browser" && role !== "admin") {
+    // Allow browser, admin, and teacher roles to access this page
+    if (role !== "browser" && role !== "admin" && role !== "teacher") {
         return (
             <div className="mx-auto mt-10 flex max-w-lg flex-col items-center px-4 text-center">
                 <h1 className="h1 mb-2 text-xl font-semibold tracking-tight text-slate-900">

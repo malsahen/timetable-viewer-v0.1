@@ -20,10 +20,20 @@ if (!["class", "teacher"].includes(mode)) {
 }
 
 const root = process.cwd();
-const inputFile =
-  mode === "class"
+let inputFile;
+
+if (mode === "class") {
+  inputFile = fs.existsSync(path.resolve(root, "pdf-work/class-master.pdf"))
     ? path.resolve(root, "pdf-work/class-master.pdf")
-    : path.resolve(root, "pdf-work/teacher-master.pdf");
+    : path.resolve(root, "pdf-work/class-master1.pdf");
+} else {
+  // User explicitly asked for teacher-master.pdf, so we prioritize that or just check it.
+  // We'll prioritize teacher-master.pdf if it exists.
+  inputFile = fs.existsSync(path.resolve(root, "pdf-work/teacher-master.pdf"))
+    ? path.resolve(root, "pdf-work/teacher-master.pdf")
+    : path.resolve(root, "pdf-work/teacher-master1.pdf");
+}
+
 const outDir = path.resolve(root, `pdf-work/out/${mode}`);
 
 if (!fs.existsSync(inputFile)) {

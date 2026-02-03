@@ -147,11 +147,11 @@ export default async function MyTimetable() {
     // Class timetables mappings
     let classMappings:
       | {
-          owner_slug: string;
-          storage_path: string;
-          page_no: number | null;
-          match_score: number | null;
-        }[]
+        owner_slug: string;
+        storage_path: string;
+        page_no: number | null;
+        match_score: number | null;
+      }[]
       | null = null;
 
     if (classVersion?.id && classSlugs.length > 0) {
@@ -179,12 +179,12 @@ export default async function MyTimetable() {
     // Signed URLs
     const teacherSignedUrl = teacherMapping
       ? (
-          await admin.storage
-            .from("timetable")
-            .createSignedUrl(teacherMapping.storage_path, 60 * 60, {
-              download: false,
-            })
-        ).data?.signedUrl ?? null
+        await admin.storage
+          .from("timetable")
+          .createSignedUrl(teacherMapping.storage_path, 60 * 60, {
+            download: false,
+          })
+      ).data?.signedUrl ?? null
       : null;
 
     const classSigned: {
@@ -201,18 +201,18 @@ export default async function MyTimetable() {
       const klass = classesBySlug[slug] ?? null;
       const signed = m
         ? (
-            await admin.storage
-              .from("timetable")
-              .createSignedUrl(m.storage_path, 60 * 60, { download: false })
-          ).data?.signedUrl ?? null
+          await admin.storage
+            .from("timetable")
+            .createSignedUrl(m.storage_path, 60 * 60, { download: false })
+        ).data?.signedUrl ?? null
         : null;
 
       const roleLabel =
         slug === ftSlug
           ? "Form Tutor"
           : slug === ctSlug
-          ? "Co-Tutor"
-          : "Class";
+            ? "Co-Tutor"
+            : "Class";
 
       classSigned.push({
         slug,
@@ -229,17 +229,25 @@ export default async function MyTimetable() {
         <h1 className="h1 mb-1 mt-2 text-xl font-semibold tracking-tight text-slate-900">
           My Timetable
         </h1>
-        <p className="muted mb-4 text-sm text-slate-500">
-          Signed in as{" "}
-          <strong className="font-semibold text-slate-900">
-            {user.email}
-          </strong>{" "}
-          — role:{" "}
-          <strong className="font-semibold text-slate-900">
-            {role}
-          </strong>
-          .
-        </p>
+        <div className="mb-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+          <p className="muted text-sm text-slate-500">
+            Signed in as{" "}
+            <strong className="font-semibold text-slate-900">
+              {user.email}
+            </strong>{" "}
+            — role:{" "}
+            <strong className="font-semibold text-slate-900">
+              {role}
+            </strong>
+            .
+          </p>
+          <a
+            href="/browse-timetables"
+            className="btn btn-outline inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+          >
+            📚 Browse All Timetables
+          </a>
+        </div>
 
         {profile?.must_change_password ? (
           <div className="alert warn mb-4 w-[95vw] max-w-[1800px] rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -265,7 +273,7 @@ export default async function MyTimetable() {
                   ? ` • Page ${teacherMapping.page_no}`
                   : ""}
                 {teacherMapping?.match_score !== null &&
-                teacherMapping?.match_score !== undefined
+                  teacherMapping?.match_score !== undefined
                   ? ` • Match ${teacherMapping.match_score}`
                   : ""}
               </div>
