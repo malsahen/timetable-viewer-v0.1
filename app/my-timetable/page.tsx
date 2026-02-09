@@ -1,4 +1,5 @@
 import "server-only";
+import Link from "next/link";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import ChangePassword from "@/app/components/ChangePassword";
@@ -29,10 +30,15 @@ type ClassRow = {
   name: string | null;
 };
 
-export default async function MyTimetable() {
+export default async function MyTimetable({
+  searchParams,
+}: {
+  searchParams: { draft?: string };
+}) {
   const sb = await supabaseServer();
   const admin = supabaseAdmin();
 
+  const isDraftRequest = searchParams.draft === "true";
   const debugMode = false;
   const debug: any = { steps: {} };
 
@@ -57,6 +63,10 @@ export default async function MyTimetable() {
     .maybeSingle<ProfileRow>();
 
   const role = (profile?.role ?? "student") as ProfileRow["role"];
+
+  // Permission for viewing drafts
+  const canViewDrafts = user.email === 'mohammadkhier@ucsiinternationalschool.edu.my';
+  const showDraft = isDraftRequest && canViewDrafts;
 
   /* =========================================================
    * TEACHER / ADMIN VIEW
@@ -101,23 +111,36 @@ export default async function MyTimetable() {
       );
     }
 
-    // Load current teacher + class versions
+    // Load teacher + class versions
+    // If showDraft is true, we want Version 37 (Draft). 
+    // Otherwise, we want the Current version (which should be 36).
+
+    let teacherVersionQuery = admin
+      .from("versions")
+      .select("id,label,kind,is_current")
+      .eq("kind", "teacher");
+
+    if (showDraft) {
+      teacherVersionQuery = teacherVersionQuery.eq("id", 51);
+    } else {
+      teacherVersionQuery = teacherVersionQuery.eq("is_current", true);
+    }
+
+    let classVersionQuery = admin
+      .from("versions")
+      .select("id,label,kind,is_current")
+      .eq("kind", "class");
+
+    if (showDraft) {
+      classVersionQuery = classVersionQuery.eq("id", 37);
+    } else {
+      classVersionQuery = classVersionQuery.eq("is_current", true);
+    }
+
     const [{ data: teacherVersion }, { data: classVersion }] =
       await Promise.all([
-        admin
-          .from("versions")
-          .select("id,label,kind,is_current")
-          .eq("kind", "teacher")
-          .eq("is_current", true)
-          .limit(1)
-          .maybeSingle(),
-        admin
-          .from("versions")
-          .select("id,label,kind,is_current")
-          .eq("kind", "class")
-          .eq("is_current", true)
-          .limit(1)
-          .maybeSingle(),
+        teacherVersionQuery.limit(1).maybeSingle(),
+        classVersionQuery.limit(1).maybeSingle(),
       ]);
 
     const ftSlug = teacher.ft_class_slug;
@@ -225,29 +248,62 @@ export default async function MyTimetable() {
     }
 
     return (
-      <div className="flex w-full flex-col items-center px-4 py-8">
-        <h1 className="h1 mb-1 mt-2 text-xl font-semibold tracking-tight text-slate-900">
-          My Timetable
-        </h1>
-        <div className="mb-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-          <p className="muted text-sm text-slate-500">
-            Signed in as{" "}
-            <strong className="font-semibold text-slate-900">
-              {user.email}
-            </strong>{" "}
-            — role:{" "}
-            <strong className="font-semibold text-slate-900">
-              {role}
-            </strong>
-            .
-          </p>
-          <a
-            href="/browse-timetables"
-            className="btn btn-outline inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
-          >
-            📚 Browse All Timetables
-          </a>
+      <div className={`flex w-full flex-col items-center px-4 py-8 transition-colors duration-500 ${showDraft ? 'bg-amber-50/30' : ''}`}>
+        <div className="w-full max-w-5xl flex flex-col items-center mb-6">
+          <h1 className="h1 mb-1 mt-2 text-xl font-semibold tracking-tight text-slate-900 flex items-center gap-2">
+            My Timetable
+            {showDraft && (
+              <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 border border-amber-200">
+                Draft Mode
+              </span>
+            )}
+          </h1>
+
+          <div className="w-full flex flex-col items-center gap-4 sm:flex-row sm:justify-between sm:items-end">
+            <p className="muted text-sm text-slate-500">
+              Signed in as{" "}
+              <strong className="font-semibold text-slate-900">
+                {user.email}
+              </strong>
+            </p>
+
+            <div className="flex items-center gap-3">
+              {canViewDrafts && (
+                <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-sm">
+                  <Link
+                    href="/my-timetable"
+                    className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${!showDraft ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Current
+                  </Link>
+                  <Link
+                    href="/my-timetable?draft=true"
+                    className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${showDraft ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Draft
+                  </Link>
+                </div>
+              )}
+
+              <Link
+                href="/browse-timetables"
+                className="btn btn-outline inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-50"
+              >
+                📚 Browse All
+              </Link>
+            </div>
+          </div>
         </div>
+
+        {showDraft && (
+          <div className="alert warn mb-6 w-[95vw] max-w-[1800px] rounded-xl border border-amber-200 bg-amber-100/50 px-4 py-3 text-sm text-amber-800 shadow-sm flex items-center gap-3">
+            <span className="text-lg">⚠️</span>
+            <div>
+              <p className="font-semibold">You are viewing a Draft Timetable.</p>
+              <p className="text-xs opacity-80">This version is not yet live for all staff. Switch back to "Current" to see the active schedule.</p>
+            </div>
+          </div>
+        )}
 
         {profile?.must_change_password ? (
           <div className="alert warn mb-4 w-[95vw] max-w-[1800px] rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -259,8 +315,8 @@ export default async function MyTimetable() {
         ) : null}
 
         {/* === Section A: Personal teacher timetable === */}
-        <div className="w-[95vw] max-w-[1800px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl mb-8">
-          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
+        <div className={`w-[95vw] max-w-[1800px] overflow-hidden rounded-2xl border bg-white shadow-xl mb-8 ${showDraft ? 'border-amber-300 ring-2 ring-amber-200/50' : 'border-slate-200'}`}>
+          <div className={`flex items-center justify-between border-b px-4 py-3 sm:px-6 ${showDraft ? 'border-amber-200 bg-amber-50/50' : 'border-slate-200 bg-slate-50'}`}>
             <div>
               <div className="font-semibold text-sm text-slate-900">
                 Teacher timetable — {teacher.full_name}
@@ -272,10 +328,6 @@ export default async function MyTimetable() {
                 {teacherMapping?.page_no
                   ? ` • Page ${teacherMapping.page_no}`
                   : ""}
-                {teacherMapping?.match_score !== null &&
-                  teacherMapping?.match_score !== undefined
-                  ? ` • Match ${teacherMapping.match_score}`
-                  : ""}
               </div>
             </div>
 
@@ -284,7 +336,7 @@ export default async function MyTimetable() {
               {teacherSignedUrl && (
                 <a
                   href={teacherSignedUrl + "&download=1"}
-                  className="btn btn-primary inline-flex items-center justify-center rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
+                  className={`btn inline-flex items-center justify-center rounded-lg px-3 py-2 text-xs font-semibold shadow-sm transition ${showDraft ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}`}
                   rel="noopener noreferrer"
                 >
                   Download PDF
