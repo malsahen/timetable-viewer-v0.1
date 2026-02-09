@@ -13,6 +13,7 @@ export default async function Home() {
           <h1 className="h1 text-2xl font-semibold tracking-tight text-slate-900">
             Announcements & Calendars
           </h1>
+          <div className="text-[8px] text-slate-300 opacity-20">BUILD:bf47945_v1</div>
           <p className="muted mt-2 mx-auto max-w-2xl text-slate-600">
             All students share the same School Year and Assessment calendars.
             Check updates below and open the PDFs anytime.
