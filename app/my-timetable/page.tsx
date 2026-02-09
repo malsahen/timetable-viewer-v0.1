@@ -33,12 +33,13 @@ type ClassRow = {
 export default async function MyTimetable({
   searchParams,
 }: {
-  searchParams: { draft?: string };
+  searchParams: Promise<{ draft?: string }>;
 }) {
   const sb = await supabaseServer();
   const admin = supabaseAdmin();
 
-  const isDraftRequest = searchParams.draft === "true";
+  const { draft } = await searchParams;
+  const isDraftRequest = draft === "true";
   const debugMode = false;
   const debug: any = { steps: {} };
 
