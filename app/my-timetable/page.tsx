@@ -65,7 +65,9 @@ export default async function MyTimetable({
   const role = (profile?.role ?? "student") as ProfileRow["role"];
 
   // Permission for viewing drafts
-  const canViewDrafts = user.email === 'mohammadkhier@ucsiinternationalschool.edu.my';
+  const authorizedEmails = ['mohammadkhier@ucsiinternationalschool.edu.my'];
+  const userEmail = (user.email || '').toLowerCase().trim();
+  const canViewDrafts = authorizedEmails.includes(userEmail);
   const showDraft = isDraftRequest && canViewDrafts;
 
   /* =========================================================
